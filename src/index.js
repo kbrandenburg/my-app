@@ -5,8 +5,8 @@ import './index.css';
 function Square(props){
   return (
     <button 
-        className="square" 
         onClick={props.onClick}
+        className={props.className}
       >
         {props.value}
       </button>
@@ -14,11 +14,22 @@ function Square(props){
 }
 
 class Board extends React.Component {
+  //todo move logic for bgcolor to renderSquare
   renderSquare(i) {
+    let bgColor = "square";
+    
+    //window.alert("i=" + i + "  line=" + this.props.line)
+    //this works ->    if (i in this.props.line) {
+    if (this.props.winrar && (i in this.props.line)) {
+      bgColor = "green";
+    }
+    
     return (
       <Square
         value={this.props.squares[i]}
         onClick={() => this.props.onClick(i)}
+        className={bgColor}
+        line={this.props.line}
       />
     );
   }
@@ -56,6 +67,8 @@ class Game extends React.Component {
       }],
       stepNumber: 0,
       xIsNext: true,
+      winrar: false,
+      line: [],
     };
   }
 
@@ -63,17 +76,27 @@ class Game extends React.Component {
     const history = this.state.history.slice(0, this.state.stepNumber +1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
-    if (calculateWinner(squares) || squares[i]) {
-      return;
+    
+    if (!this.state.winrar && !squares[i]) {
+      squares[i] = this.state.xIsNext ? 'X' : 'O';
+      this.setState({
+        history: history.concat([{
+          squares: squares,
+        }]),
+        stepNumber: history.length,
+        xIsNext: !this.state.xIsNext,
+      });
     }
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({
-      history: history.concat([{
-        squares: squares,
-      }]),
-      stepNumber: history.length,
-      xIsNext: !this.state.xIsNext,
-    });
+    let calculations = calculateWinner(squares);
+    if (calculations['winner']) {
+      //we have to check AFTER modifying board to see if winner
+      //but we also have to check for winner before attempting to mark board!
+      this.setState({
+        winrar: true,
+        line: calculations['line'],
+      });
+      
+    }
   }
 
   jumpTo(step) {
@@ -86,7 +109,7 @@ class Game extends React.Component {
   render() {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
-    const winner = calculateWinner(current.squares);
+    const winner = calculateWinner(current.squares)['winner'];
 
     const moves = history.map((step,move) => {
       const desc = move ?
@@ -112,6 +135,8 @@ class Game extends React.Component {
           <Board 
             squares={current.squares}
             onClick={(i) => this.handleClick(i)}
+            winrar={this.state.winrar}
+            line={this.state.line}
           />
         </div>
         <div className="game-info">
@@ -138,10 +163,10 @@ function calculateWinner(squares) {
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
     if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-      return squares[a];
+      return {'winner':squares[a], 'line':lines[i]};
     }
   }
-  return null;
+  return {'winner':null,'line':null};
 }
 
 
