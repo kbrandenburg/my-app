@@ -17,10 +17,7 @@ class Board extends React.Component {
   //todo move logic for bgcolor to renderSquare
   renderSquare(i) {
     let bgColor = "square";
-    
-    //window.alert("i=" + i + "  line=" + this.props.line)
-    //this works ->    if (i in this.props.line) {
-    if (this.props.winrar && (i in this.props.line)) {
+    if (this.props.line.includes(i)) {
       bgColor = "green";
     }
     
