@@ -53,7 +53,7 @@ class Board extends React.Component {
       </div>
     );
   }
-}
+} 
 
 class Game extends React.Component {
   constructor(props) {
@@ -61,11 +61,11 @@ class Game extends React.Component {
     this.state = {
       history: [{
         squares: Array(9).fill(null),
+        line:[],
       }],
       stepNumber: 0,
       xIsNext: true,
       winrar: false,
-      line: [],
     };
   }
 
@@ -73,24 +73,35 @@ class Game extends React.Component {
     const history = this.state.history.slice(0, this.state.stepNumber +1);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
-    
-    if (!this.state.winrar && !squares[i]) {
-      squares[i] = this.state.xIsNext ? 'X' : 'O';
-      this.setState({
-        history: history.concat([{
-          squares: squares,
-        }]),
-        stepNumber: history.length,
-        xIsNext: !this.state.xIsNext,
-      });
-    }
+    //const line = current.line
+
     let calculations = calculateWinner(squares);
+    //window.alert("calc[winner]=" + calculations['winner'] + "  squares[i]=" + squares[i]);
+    if (!squares[i]) {
+      if (!calculations['winner']) {
+        squares[i] = this.state.xIsNext ? 'X' : 'O';
+        calculations = calculateWinner(squares);
+        if (!calculateWinner(squares)['winner']) {
+          this.setState({
+            winrar: false,
+            history: history.concat([{squares: squares, line: calculations['line']}]),
+            stepNumber: history.length,
+            xIsNext: !this.state.xIsNext,
+          });
+        }
+      }
+    }
+    //this alert tells us the darn squares is set its just not rendering
+    //window.alert("squares[i] = " + squares[i]);
+    
     if (calculations['winner']) {
       //we have to check AFTER modifying board to see if winner
       //but we also have to check for winner before attempting to mark board!
       this.setState({
         winrar: true,
-        line: calculations['line'],
+        history: history.concat([{squares: squares, line: calculations['line']}]),
+        stepNumber: history.length,
+        xIsNext: !this.state.xIsNext,
       });
       
     }
@@ -133,7 +144,7 @@ class Game extends React.Component {
             squares={current.squares}
             onClick={(i) => this.handleClick(i)}
             winrar={this.state.winrar}
-            line={this.state.line}
+            line={current.line}
           />
         </div>
         <div className="game-info">
@@ -163,7 +174,7 @@ function calculateWinner(squares) {
       return {'winner':squares[a], 'line':lines[i]};
     }
   }
-  return {'winner':null,'line':null};
+  return {'winner':null,'line':[]};
 }
 
 
